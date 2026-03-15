@@ -1,20 +1,27 @@
 import { supabase } from '../lib/supabase';
-import api from './api';
 
 class PaymentService {
     async createOrder(amount, planName, email, fullName, company, token) {
         try {
-            console.log("PaymentService: Creating order via Backend API...", { amount, planName });
+            console.log("PaymentService: Creating order via Supabase Edge Function...", { amount, planName });
             
-            const response = await api.post('/payments/create-order', {
-                amount,
-                planName,
-                email,
-                name: fullName,
-                company
+            const { data, error } = await supabase.functions.invoke('handle-payment', {
+                body: {
+                    action: 'create-order',
+                    amount,
+                    planName,
+                    email,
+                    name: fullName,
+                    company
+                }
             });
 
-            return response.data;
+            if (error) {
+                console.error("PaymentService: Create order error from SDK:", error);
+                throw error;
+            }
+
+            return data;
         } catch (error) {
             console.error("PaymentService: Create order fatal error:", error);
             throw error;
@@ -23,15 +30,23 @@ class PaymentService {
 
     async verifyPayment(paymentData, planName, email, token) {
         try {
-            console.log("PaymentService: Verifying payment via Backend API...", { planName, email });
+            console.log("PaymentService: Verifying payment via Supabase Edge Function...", { planName, email });
             
-            const response = await api.post('/payments/verify', {
-                ...paymentData,
-                planName,
-                email
+            const { data, error } = await supabase.functions.invoke('handle-payment', {
+                body: {
+                    action: 'verify',
+                    ...paymentData,
+                    planName,
+                    email
+                }
             });
 
-            return response.data;
+            if (error) {
+                console.error("PaymentService: Verification error from SDK:", error);
+                throw error;
+            }
+
+            return data;
         } catch (error) {
             console.error("PaymentService: Verification fatal error:", error);
             throw error;

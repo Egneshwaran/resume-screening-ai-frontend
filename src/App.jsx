@@ -15,7 +15,6 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import CreateJob from './pages/CreateJob';
 import RecentActivity from './pages/RecentActivity';
-import Notifications from './pages/Notifications';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -41,7 +40,6 @@ function App() {
                 <Route path="rankings/:jobId" element={<ProtectedRoute><AdminLayout><Rankings /></AdminLayout></ProtectedRoute>} />
                 <Route path="analytics" element={<ProtectedRoute><AdminLayout><Dashboard /></AdminLayout></ProtectedRoute>} />
                 <Route path="activity" element={<ProtectedRoute><AdminLayout><RecentActivity /></AdminLayout></ProtectedRoute>} />
-                <Route path="notifications" element={<ProtectedRoute><AdminLayout><Notifications /></AdminLayout></ProtectedRoute>} />
                 <Route path="profile" element={<ProtectedRoute><AdminLayout><Profile /></AdminLayout></ProtectedRoute>} />
                 <Route path="settings" element={<ProtectedRoute><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
             </Route>
