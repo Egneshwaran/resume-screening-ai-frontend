@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Mail, Building, Shield, CheckCircle, Loader2, Edit, Save, X, Lock, Camera, Key, BarChart3, Users } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import jobService from '../services/jobs.service';
 import resumeService from '../services/resumes.service';
 
@@ -82,7 +82,7 @@ const Profile = () => {
         e.preventDefault();
         setPassError(null);
         setPassSuccess(null);
-        
+
         if (passData.newPassword.length < 6) {
             setPassError("Password must be at least 6 characters.");
             return;
@@ -155,7 +155,7 @@ const Profile = () => {
                 {/* Profile Card */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="glass-card flex flex-col items-center text-center overflow-hidden">
-                        
+
                         {/* Avatar Header Background */}
                         <div className="h-24 w-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 mb-12 relative">
                             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
@@ -173,12 +173,12 @@ const Profile = () => {
                                     <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center justify-center m-[3px]">
                                         <Camera size={20} className="text-white" />
                                     </div>
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        ref={fileInputRef} 
-                                        className="hidden" 
-                                        onChange={handleAvatarUpload} 
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        onChange={handleAvatarUpload}
                                     />
                                 </div>
                             </div>
@@ -214,9 +214,9 @@ const Profile = () => {
                                 </div>
                                 <span className="text-[10px] bg-black/10 dark:bg-white/10 text-foreground-muted px-2 py-0.5 rounded uppercase font-bold text-xs">Disabled</span>
                             </div>
-                            
+
                             {!isChangingPassword ? (
-                                <button 
+                                <button
                                     onClick={() => setIsChangingPassword(true)}
                                     className="w-full py-2 bg-black/5 dark:bg-white/5 hover:bg-indigo-500 hover:text-white border border-border hover:border-indigo-500 rounded-lg text-xs font-bold transition-all text-foreground flex items-center justify-center gap-2 group"
                                 >
@@ -225,34 +225,34 @@ const Profile = () => {
                             ) : (
                                 <form onSubmit={handlePasswordChange} className="space-y-3 bg-background/50 p-4 rounded-xl border border-indigo-500/30 animate-in fade-in zoom-in-95">
                                     <h4 className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-2">Update Password</h4>
-                                    <input 
-                                        type="password" 
+                                    <input
+                                        type="password"
                                         placeholder="New Password"
                                         value={passData.newPassword}
-                                        onChange={(e) => setPassData({...passData, newPassword: e.target.value})}
+                                        onChange={(e) => setPassData({ ...passData, newPassword: e.target.value })}
                                         className="w-full bg-input border border-border rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-indigo-500"
                                         required
                                     />
-                                    <input 
-                                        type="password" 
+                                    <input
+                                        type="password"
                                         placeholder="Confirm Password"
                                         value={passData.confirmPassword}
-                                        onChange={(e) => setPassData({...passData, confirmPassword: e.target.value})}
+                                        onChange={(e) => setPassData({ ...passData, confirmPassword: e.target.value })}
                                         className="w-full bg-input border border-border rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-indigo-500"
                                         required
                                     />
                                     {passError && <p className="text-[10px] text-rose-500 font-bold">{passError}</p>}
                                     {passSuccess && <p className="text-[10px] text-emerald-500 font-bold">{passSuccess}</p>}
-                                    
+
                                     <div className="flex gap-2 pt-1">
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={() => setIsChangingPassword(false)}
                                             className="flex-1 py-2 rounded-lg text-xs font-bold text-foreground-muted hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                                         >
                                             Cancel
                                         </button>
-                                        <button 
+                                        <button
                                             type="submit"
                                             disabled={savingPass}
                                             className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-500/20 transition-colors disabled:opacity-50"
@@ -270,14 +270,14 @@ const Profile = () => {
                 <div className="lg:col-span-2 space-y-8">
                     <div className="glass-card p-8 transition-all duration-300 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
-                        
+
                         <div className="flex items-center justify-between mb-8 relative z-10">
                             <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
                                 <User size={20} className="text-indigo-500" />
                                 Identity Information
                             </h3>
                             {!isEditing ? (
-                                <button 
+                                <button
                                     onClick={() => setIsEditing(true)}
                                     className="px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-indigo-500 hover:text-white border border-border hover:border-indigo-500 text-foreground font-bold transition-all flex items-center gap-2 text-xs shadow-sm hover:shadow-lg hover:shadow-indigo-500/20"
                                 >
@@ -285,7 +285,7 @@ const Profile = () => {
                                 </button>
                             ) : (
                                 <div className="flex gap-2">
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             setIsEditing(false);
                                             setFormData({ full_name: profile?.full_name || '', company_name: profile?.company_name || '' });
@@ -294,7 +294,7 @@ const Profile = () => {
                                     >
                                         <X size={16} />
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={handleSaveDetails}
                                         disabled={savingDetails}
                                         className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2 disabled:opacity-50"
@@ -314,10 +314,10 @@ const Profile = () => {
                             <div className="space-y-2">
                                 <label className="text-[10px] uppercase tracking-widest font-black text-foreground-muted block">Full Name</label>
                                 {isEditing ? (
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={formData.full_name}
-                                        onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                                         className="w-full bg-input border border-indigo-500/50 rounded-lg p-2.5 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                                         placeholder="Enter full name"
                                     />
@@ -325,15 +325,15 @@ const Profile = () => {
                                     <p className="text-foreground font-bold text-lg">{profile?.full_name}</p>
                                 )}
                             </div>
-                            
+
                             {/* Company Name */}
                             <div className="space-y-2">
                                 <label className="text-[10px] uppercase tracking-widest font-black text-foreground-muted block">Company Affiliation</label>
                                 {isEditing ? (
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={formData.company_name}
-                                        onChange={(e) => setFormData({...formData, company_name: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                                         className="w-full bg-input border border-indigo-500/50 rounded-lg p-2.5 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow"
                                         placeholder="Enter company name"
                                     />
@@ -373,7 +373,7 @@ const Profile = () => {
                             <CheckCircle size={20} className="text-indigo-500" />
                             Subscription Plan
                         </h3>
-                        
+
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div className="space-y-1">
                                 <p className="text-[10px] uppercase tracking-widest font-black text-foreground-muted">Current Plan</p>
@@ -391,23 +391,23 @@ const Profile = () => {
                                 <p className="text-[10px] uppercase tracking-widest font-black text-foreground-muted">Usage</p>
                                 <div className="flex items-end gap-2">
                                     <p className="text-2xl font-black text-foreground tracking-tight">
-                                        {subscription 
-                                            ? (subscription.resume_limit >= 999999 
-                                                ? `${subscription.resumes_used || 0} / Unlimited` 
+                                        {subscription
+                                            ? (subscription.resume_limit >= 999999
+                                                ? `${subscription.resumes_used || 0} / Unlimited`
                                                 : `${subscription.resumes_used || 0}/${subscription.resume_limit}`)
                                             : '0/5'}
                                     </p>
                                     <p className="text-xs text-foreground-muted mb-1.5 uppercase font-bold tracking-tighter">Resumes</p>
                                 </div>
                                 <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden mt-1 max-w-[150px]">
-                                    <div 
-                                        className="h-full bg-indigo-500" 
+                                    <div
+                                        className="h-full bg-indigo-500"
                                         style={{ width: `${Math.min(100, (subscription ? ((subscription.resumes_used || 0) / subscription.resume_limit) * 100 : 0))}%` }}
                                     ></div>
                                 </div>
                             </div>
 
-                            <button 
+                            <button
                                 onClick={() => window.location.href = '/#pricing'}
                                 className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-600/20"
                             >

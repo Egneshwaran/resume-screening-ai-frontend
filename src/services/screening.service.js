@@ -79,12 +79,12 @@ class ScreeningService {
 
     async getAllResultsCombined() {
         const response = await api.get('/screening/all');
-        return response.data;
+        return { data: response.data };
     }
 
     async getResultsByJobCombined(jobId) {
         const response = await api.get(`/screening/all/results/${jobId}`);
-        return response.data;
+        return { data: response.data };
     }
 }
 

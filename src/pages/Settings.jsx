@@ -204,36 +204,36 @@ const Settings = () => {
                         label="Automatic Resume Parsing"
                         description="Auto-extract candidate details from uploaded PDFs."
                     >
-                        <ToggleButton 
-                            active={settings.autoParseResumes} 
-                            onClick={() => setSettings({ ...settings, autoParseResumes: !settings.autoParseResumes })} 
+                        <ToggleButton
+                            active={settings.autoParseResumes}
+                            onClick={() => setSettings({ ...settings, autoParseResumes: !settings.autoParseResumes })}
                         />
                     </SettingRow>
                     <SettingRow
                         label="Skill Extraction"
                         description="Identify and extract technical and soft skills."
                     >
-                        <ToggleButton 
-                            active={settings.extractSkills} 
-                            onClick={() => setSettings({ ...settings, extractSkills: !settings.extractSkills })} 
+                        <ToggleButton
+                            active={settings.extractSkills}
+                            onClick={() => setSettings({ ...settings, extractSkills: !settings.extractSkills })}
                         />
                     </SettingRow>
                     <SettingRow
                         label="Experience Detection"
                         description="Calculate years of experience from work history."
                     >
-                        <ToggleButton 
-                            active={settings.detectExperience} 
-                            onClick={() => setSettings({ ...settings, detectExperience: !settings.detectExperience })} 
+                        <ToggleButton
+                            active={settings.detectExperience}
+                            onClick={() => setSettings({ ...settings, detectExperience: !settings.detectExperience })}
                         />
                     </SettingRow>
                     <SettingRow
                         label="Education Extraction"
                         description="Parse degrees, universities, and graduation years."
                     >
-                        <ToggleButton 
-                            active={settings.extractEducation} 
-                            onClick={() => setSettings({ ...settings, extractEducation: !settings.extractEducation })} 
+                        <ToggleButton
+                            active={settings.extractEducation}
+                            onClick={() => setSettings({ ...settings, extractEducation: !settings.extractEducation })}
                         />
                     </SettingRow>
                 </SettingsCard>
@@ -248,27 +248,27 @@ const Settings = () => {
                         label="Score Threshold Alerts"
                         description={`Notify when a candidate exceeds ${settings.highPotentialThreshold}% matching score.`}
                     >
-                        <ToggleButton 
-                            active={settings.alertScoreThresholdEnabled} 
-                            onClick={() => setSettings({ ...settings, alertScoreThresholdEnabled: !settings.alertScoreThresholdEnabled })} 
+                        <ToggleButton
+                            active={settings.alertScoreThresholdEnabled}
+                            onClick={() => setSettings({ ...settings, alertScoreThresholdEnabled: !settings.alertScoreThresholdEnabled })}
                         />
                     </SettingRow>
                     <SettingRow
                         label="Strong Skill Match"
                         description="Notify when a candidate hits 100% on required skills."
                     >
-                        <ToggleButton 
-                            active={settings.alertStrongSkillMatch} 
-                            onClick={() => setSettings({ ...settings, alertStrongSkillMatch: !settings.alertStrongSkillMatch })} 
+                        <ToggleButton
+                            active={settings.alertStrongSkillMatch}
+                            onClick={() => setSettings({ ...settings, alertStrongSkillMatch: !settings.alertStrongSkillMatch })}
                         />
                     </SettingRow>
                     <SettingRow
                         label="Top Candidate Identified"
                         description="Notify when the AI screening flags a top priority candidate."
                     >
-                        <ToggleButton 
-                            active={settings.alertTopCandidateIdentified} 
-                            onClick={() => setSettings({ ...settings, alertTopCandidateIdentified: !settings.alertTopCandidateIdentified })} 
+                        <ToggleButton
+                            active={settings.alertTopCandidateIdentified}
+                            onClick={() => setSettings({ ...settings, alertTopCandidateIdentified: !settings.alertTopCandidateIdentified })}
                         />
                     </SettingRow>
                 </SettingsCard>
@@ -283,25 +283,25 @@ const Settings = () => {
                         label="Auto-Email Shortlisted"
                         description="Automatically email candidates when marked as High Potential."
                     >
-                        <ToggleButton 
-                            active={settings.autoEmailShortlisted} 
-                            onClick={() => setSettings({ ...settings, autoEmailShortlisted: !settings.autoEmailShortlisted })} 
+                        <ToggleButton
+                            active={settings.autoEmailShortlisted}
+                            onClick={() => setSettings({ ...settings, autoEmailShortlisted: !settings.autoEmailShortlisted })}
                         />
                     </SettingRow>
-                    
+
                     <div className="py-4 border-b border-border">
                         <label className="text-sm font-bold text-foreground mb-2 block">Default Email Template</label>
-                        <textarea 
+                        <textarea
                             className="w-full bg-input border border-border rounded-lg p-3 text-sm text-foreground focus:outline-none focus:border-indigo-500 font-mono h-32"
                             value={settings.defaultEmailTemplate}
                             onChange={(e) => setSettings({ ...settings, defaultEmailTemplate: e.target.value })}
                             placeholder="Dear {candidate_name}..."
                         />
                     </div>
-                    
+
                     <div className="py-4">
                         <label className="text-sm font-bold text-foreground mb-2 block">Recruiter Signature</label>
-                        <textarea 
+                        <textarea
                             className="w-full bg-input border border-border rounded-lg p-3 text-sm text-foreground focus:outline-none focus:border-indigo-500 font-mono h-24"
                             value={settings.recruiterSignature}
                             onChange={(e) => setSettings({ ...settings, recruiterSignature: e.target.value })}

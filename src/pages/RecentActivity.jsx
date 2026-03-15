@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-    Activity, 
-    ArrowLeft, 
-    Search, 
-    Filter, 
-    Briefcase, 
-    ChevronRight, 
-    Clock, 
-    ShieldCheck, 
+import {
+    Activity,
+    ArrowLeft,
+    Search,
+    Filter,
+    Briefcase,
+    ChevronRight,
+    Clock,
+    ShieldCheck,
     Zap,
     TrendingUp,
     FileText,
@@ -36,7 +36,7 @@ const RecentActivity = () => {
                 screeningService.getAllResultsCombined(), // Aggregate all sources
                 jobService.getAllJobs()
             ]);
-            
+
             setActivities(resultsRes.data || []);
             setJobs(jobsRes.data || []);
         } catch (error) {
@@ -64,7 +64,7 @@ const RecentActivity = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <button 
+                    <button
                         onClick={() => navigate('/admin')}
                         className="flex items-center gap-2 text-foreground-muted hover:text-indigo-500 transition-colors mb-2 text-sm font-bold"
                     >
@@ -88,7 +88,7 @@ const RecentActivity = () => {
                             className="bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/50 w-64"
                         />
                     </div>
-                    
+
                     <div className="relative">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" size={18} />
                         <select
@@ -117,7 +117,7 @@ const RecentActivity = () => {
                         {filteredActivities.map((activity, idx) => (
                             <div key={activity.id} className="p-6 hover:bg-white/[0.02] transition-all group flex items-start gap-6">
                                 <div className={`mt-2 w-3 h-3 rounded-full ${getStatusColor(activity.totalScore)} ring-4 ring-black/10 shadow-[0_0_15px_rgba(99,102,241,0.3)]`}></div>
-                                
+
                                 <div className="flex-1">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                                         <div>
@@ -142,7 +142,7 @@ const RecentActivity = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="text-right flex flex-col items-end gap-1">
                                             <div className="text-3xl font-black text-indigo-400 drop-shadow-[0_0_10px_rgba(129,140,248,0.3)]">{Math.round(activity.totalScore)}%</div>
                                             <div className="text-[10px] text-foreground-muted font-black uppercase tracking-[0.2em]">Match Confidence</div>
@@ -160,7 +160,7 @@ const RecentActivity = () => {
                                             "{activity.explanation || 'No detailed analysis generated for this candidate.'}"
                                         </p>
                                     </div>
-                                    
+
                                     <div className="mt-4 flex items-center justify-between">
                                         <div className="flex flex-wrap gap-2">
                                             {(activity.matchedSkills || '').split(',').slice(0, 5).map(skill => (
@@ -169,7 +169,7 @@ const RecentActivity = () => {
                                                 </span>
                                             ))}
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={() => navigate(`/admin/rankings/${activity.job?.id}`)}
                                             className="px-4 py-2 bg-indigo-600/10 text-indigo-400 text-xs font-bold rounded-lg hover:bg-indigo-600 hover:text-white transition-all border border-indigo-500/20 flex items-center gap-2"
                                         >
@@ -185,7 +185,7 @@ const RecentActivity = () => {
                         <Users size={60} className="mx-auto text-foreground-muted/20" />
                         <h3 className="text-2xl font-bold text-foreground">No Activity Found</h3>
                         <p className="text-foreground-muted max-w-xs mx-auto">Try adjusting your filters or run new evaluations to see activity logs.</p>
-                        <button 
+                        <button
                             onClick={() => navigate('/admin')}
                             className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-600/30 hover:bg-indigo-500"
                         >

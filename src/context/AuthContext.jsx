@@ -1,9 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
-const AuthContext = createContext({});
-
-export const useAuth = () => useContext(AuthContext);
+export const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -11,6 +9,8 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [authInitialized, setAuthInitialized] = useState(false);
+
 
     const fetchSubscription = async (email) => {
         try {
@@ -39,35 +39,59 @@ export const AuthProvider = ({ children }) => {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
                 if (error) throw error;
-                
+
                 if (!isMounted) return;
 
                 if (session) {
                     setUser(session.user);
                     setToken(session.access_token);
-                    // Supabase stores user metadata in user.user_metadata
+
+                    // Sync with api.js requirement
+                    localStorage.setItem('user', JSON.stringify({
+                        ...session.user,
+                        token: session.access_token
+                    }));
+
                     const userProfile = {
-                        name: session.user.user_metadata.full_name,
-                        company_name: session.user.user_metadata.company_name,
-                        role: session.user.user_metadata.role || 'HR'
+                        full_name: session.user.user_metadata?.full_name || 'HR Manager',
+                        company_name: session.user.user_metadata?.company_name || 'Recruitment AI',
+                        role: session.user.user_metadata?.role || 'HR'
                     };
                     setProfile(userProfile);
-                    
+
                     const sub = await fetchSubscription(session.user.email);
                     if (isMounted) setSubscription(sub);
                 } else {
                     setToken(null);
                     setUser(null);
                     setProfile(null);
+                    localStorage.removeItem('user');
                 }
-                setLoading(false);
             } catch (err) {
                 console.error('Error getting session:', err);
-                if (isMounted) setLoading(false);
+                if (isMounted) {
+                    setToken(null);
+                    setUser(null);
+                    setProfile(null);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                    setAuthInitialized(true);
+                }
             }
+
         };
 
         getSession();
+
+        // Safety timeout to prevent infinite loading if Supabase hangs
+        const safetyTimeout = setTimeout(() => {
+            if (isMounted) {
+                console.warn('AuthContext: Safety timeout reached, forcing loading to false');
+                setLoading(false);
+            }
+        }, 5000);
 
         const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
@@ -75,31 +99,39 @@ export const AuthProvider = ({ children }) => {
                     setUser(session.user);
                     setToken(session.access_token);
                     const userProfile = {
-                        name: session.user.user_metadata.full_name,
-                        company_name: session.user.user_metadata.company_name,
-                        role: session.user.user_metadata.role || 'HR'
+                        full_name: session.user.user_metadata?.full_name || 'HR Manager',
+                        company_name: session.user.user_metadata?.company_name || 'Recruitment AI',
+                        role: session.user.user_metadata?.role || 'HR'
                     };
                     setProfile(userProfile);
                     const sub = await fetchSubscription(session.user.email);
                     setSubscription(sub);
+
+                    // Sync with api.js requirement
+                    localStorage.setItem('user', JSON.stringify({
+                        ...session.user,
+                        token: session.access_token
+                    }));
                 } else {
                     setUser(null);
                     setToken(null);
                     setProfile(null);
                     setSubscription(null);
+                    localStorage.removeItem('user');
                 }
-                setLoading(true);
                 setLoading(false);
+                clearTimeout(safetyTimeout);
             }
         );
 
         return () => {
             isMounted = false;
             authListener?.unsubscribe();
+            clearTimeout(safetyTimeout);
         };
     }, []);
 
-    const signUp = async ({ email, password, fullName, companyName }) => {
+    const signUp = useCallback(async ({ email, password, fullName, companyName }) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -114,9 +146,9 @@ export const AuthProvider = ({ children }) => {
 
         if (error) throw error;
         return data;
-    };
+    }, []);
 
-    const signIn = async ({ email, password }) => {
+    const signIn = useCallback(async ({ email, password }) => {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -124,58 +156,78 @@ export const AuthProvider = ({ children }) => {
 
         if (error) throw error;
         return data;
-    };
+    }, []);
 
-    const signOut = async () => {
-        await supabase.auth.signOut();
-        setUser(null);
-        setProfile(null);
-        setSubscription(null);
-        setToken(null);
-        localStorage.clear();
-        sessionStorage.clear();
-    };
+    const signOut = useCallback(async () => {
+        try {
+            console.log('AuthContext: Starting ultra-robust sign out...');
 
-    const resetPasswordForEmail = async (email) => {
+            // 1. Clear state IMMEDIATELY (Synchronous)
+            setUser(null);
+            setProfile(null);
+            setSubscription(null);
+            setToken(null);
+
+            // 2. Clear all local storage IMMEDIATELY (Synchronous)
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 3. Attempt Supabase sign out with a race condition (timeout)
+            // We don't want to wait forever for a network request during logout
+            await Promise.race([
+                supabase.auth.signOut(),
+                new Promise(resolve => setTimeout(resolve, 1500)) // 1.5s timeout
+            ]);
+
+            console.log('AuthContext: Sign out local data cleared');
+        } catch (err) {
+            console.error('Ultra-robust logout error:', err);
+        } finally {
+            // 4. Force hard redirect to clear everything and reset app state
+            window.location.href = '/login';
+        }
+    }, []);
+
+    const resetPasswordForEmail = useCallback(async (email) => {
         const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
         return data;
-    };
+    }, []);
 
-    const updatePassword = async (newPassword) => {
+    const updatePassword = useCallback(async (newPassword) => {
         const { data, error } = await supabase.auth.updateUser({
             password: newPassword
         });
         if (error) throw error;
         return data;
-    };
+    }, []);
 
-    const updateProfileData = async (userId, updates) => {
+    const updateProfileData = useCallback(async (userId, updates) => {
         const { data, error } = await supabase.auth.updateUser({
             data: updates
         });
         if (error) throw error;
-        
+
         const newProfile = {
-            name: data.user.user_metadata.full_name,
+            full_name: data.user.user_metadata.full_name,
             company_name: data.user.user_metadata.company_name,
             role: data.user.user_metadata.role
         };
         setProfile(newProfile);
         return data;
-    };
+    }, []);
 
-    const refreshSubscription = async () => {
+    const refreshSubscription = useCallback(async () => {
         if (user) {
             const sub = await fetchSubscription(user.email);
             setSubscription(sub);
             return sub;
         }
-    };
+    }, [user]);
 
-    const value = {
+    const value = useMemo(() => ({
         user,
         profile,
         loading,
@@ -189,21 +241,21 @@ export const AuthProvider = ({ children }) => {
         updatePassword,
         updateProfileData,
         isAuthenticated: () => !!user,
-        isHR: () => profile?.role === 'HR',
+        isHR: () => profile?.role === 'HR' || profile?.role === 'ADMIN',
         isAdmin: () => profile?.role === 'ADMIN',
         getCurrentUser: () => {
             if (!user) return null;
             return {
                 id: user.id,
                 email: user.email,
-                fullName: profile?.name,
+                fullName: profile?.full_name,
                 companyName: profile?.company_name,
                 role: profile?.role,
                 token: token,
                 subscription: subscription,
             };
         },
-    };
+    }), [user, profile, loading, token, subscription, refreshSubscription, signUp, signIn, signOut, resetPasswordForEmail, updatePassword, updateProfileData]);
 
     return (
         <AuthContext.Provider value={value}>

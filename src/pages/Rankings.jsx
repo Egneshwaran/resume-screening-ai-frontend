@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Info, AlertCircle, CheckCircle2, XCircle, Download, Loader2, User, Activity, Target, Zap, Award, Layers, TrendingUp, BarChart3, ChevronRight } from 'lucide-react';
 import screeningService from '../services/screening.service';
 import jobService from '../services/jobs.service';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const Rankings = () => {
     const { jobId } = useParams();
@@ -134,10 +134,9 @@ const Rankings = () => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className={`text-3xl font-black drop-shadow-[0_0_8px_rgba(129,140,248,0.3)] ${
-                                            result.total_score >= 80 ? 'text-emerald-500' : 
-                                            result.total_score >= 60 ? 'text-indigo-500' : 'text-rose-500'
-                                        }`}>
+                                        <div className={`text-3xl font-black drop-shadow-[0_0_8px_rgba(129,140,248,0.3)] ${result.total_score >= 80 ? 'text-emerald-500' :
+                                                result.total_score >= 60 ? 'text-indigo-500' : 'text-rose-500'
+                                            }`}>
                                             {Math.round(result.total_score || 0)}%
                                         </div>
                                         <div className="text-[10px] text-foreground-muted font-black uppercase tracking-widest">Match Score</div>
@@ -201,7 +200,7 @@ const Rankings = () => {
                                                     </div>
                                                 </div>
                                                 <div className="h-2 w-full bg-foreground/5 rounded-full overflow-hidden">
-                                                    <div 
+                                                    <div
                                                         className={`h-full ${item.bg} rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.2)]`}
                                                         style={{ width: `${item.score || 0}%` }}
                                                     />
@@ -281,7 +280,7 @@ const Rankings = () => {
                                 <section className="p-6 rounded-3xl bg-indigo-600/5 border border-indigo-500/20 relative overflow-hidden group hover:bg-indigo-600/[0.08] transition-all duration-500 shadow-inner">
                                     <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors" />
                                     <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-colors" />
-                                    
+
                                     <h4 className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                         <Zap size={14} className="animate-pulse" /> Explainable AI (XAI) Rationale
                                     </h4>

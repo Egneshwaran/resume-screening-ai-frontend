@@ -44,7 +44,7 @@ import {
     CheckCircle2,
     Trash2
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import exportService from '../services/export.service';
 import jobService from '../services/jobs.service';
 import screeningService from '../services/screening.service';
@@ -91,6 +91,9 @@ const Dashboard = () => {
     const { profile } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [resultsLoading, setResultsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [exportLoading, setExportLoading] = useState(false);
     const [screeningLoading, setScreeningLoading] = useState(false);
     const [showExportOptions, setShowExportOptions] = useState(false);
@@ -98,6 +101,7 @@ const Dashboard = () => {
     const [selectedJobId, setSelectedJobId] = useState('');
     const [screeningResults, setScreeningResults] = useState([]);
     const [activeTab, setActiveTab] = useState(location.pathname.includes('analytics') ? 'analytics' : 'overview');
+    const [retryCount, setRetryCount] = useState(0);
 
     // Sync tab state with URL changes (e.g. from Sidebar)
     useEffect(() => {
@@ -107,31 +111,54 @@ const Dashboard = () => {
             setActiveTab('overview');
         }
 
-        // Fetch jobs on mount
-        fetchJobs();
+        // Only fetch jobs if we don't have them yet or on initial mount
+        if (jobs.length === 0) {
+            fetchJobs();
+        }
     }, [location.pathname]);
 
     const fetchJobs = async () => {
+        if (retryCount > 0) setLoading(true); // Only show full loader on explicit retry
+        setError(null);
         try {
             const response = await jobService.getAllJobs();
-            setJobs(response.data);
-            if (response.data.length > 0) {
-                setSelectedJobId(response.data[0].id);
-                fetchResults(response.data[0].id);
+            const jobsData = response.data || [];
+            setJobs(jobsData);
+            setLoading(false);
+
+            if (jobsData.length > 0) {
+                const firstJobId = jobsData[0].id;
+                setSelectedJobId(firstJobId);
+                // fetchResults is called asynchronously and doesn't block the UI
+                fetchResults(firstJobId);
             }
         } catch (error) {
             console.error("Failed to fetch jobs:", error);
+            setError("Unable to connect to the recruitment server. Please try refreshing or checking your connection.");
+            setLoading(false);
         }
     };
 
     const fetchResults = async (jobId) => {
+        setResultsLoading(true);
         try {
-            // Fetch combined results from both Resume Bank and AI Screening
+            // Using a timeout for this specific call to avoid hanging
             const response = await screeningService.getResultsCombined(jobId);
-            setScreeningResults(response.data);
+            setScreeningResults(response.data || []);
         } catch (error) {
             console.error("Failed to fetch results:", error);
+            // Non-critical error, we can still show the dashboard
+            if (error.code === 'ECONNABORTED') {
+                console.warn("Results fetch timed out");
+            }
+        } finally {
+            setResultsLoading(false);
         }
+    };
+
+    const handleRetry = () => {
+        setRetryCount(prev => prev + 1);
+        fetchJobs();
     };
 
     const handleJobChange = (jobId) => {
@@ -233,7 +260,7 @@ const Dashboard = () => {
 
     const statusHighlights = [
         { label: "Active Job Roles", value: jobs.length, icon: Briefcase, color: "text-blue-400" },
-        { label: "AI Screening Status", value: screeningLoading ? "Running..." : "System Idle", icon: ShieldCheck, color: "text-emerald-400" },
+        { label: "AI Screening Status", value: resultsLoading ? "Syncing..." : (screeningLoading ? "Running..." : "System Idle"), icon: ShieldCheck, color: "text-emerald-400" },
         { label: "System Confidence", value: "98.4%", icon: Target, color: "text-purple-400" },
     ];
 
@@ -331,6 +358,55 @@ const Dashboard = () => {
         }
     };
 
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+                <p className="text-foreground-muted font-medium animate-pulse">Syncing recruitment data...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 glass-card p-12 text-center max-w-2xl mx-auto">
+                <div className="p-4 rounded-full bg-rose-500/10 text-rose-500">
+                    <AlertCircle size={48} />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-foreground">Service Unavailable</h3>
+                    <p className="text-foreground-muted mt-2">{error}</p>
+                </div>
+                <button
+                    onClick={handleRetry}
+                    className="premium-button px-8 py-3 rounded-xl font-bold flex items-center gap-2"
+                >
+                    <Activity size={18} /> Retry Connection
+                </button>
+            </div>
+        );
+    }
+
+    if (jobs.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 glass-card p-12 text-center max-w-2xl mx-auto">
+                <div className="p-4 rounded-full bg-indigo-500/10 text-indigo-500">
+                    <Briefcase size={48} />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-foreground">No Projects Found</h3>
+                    <p className="text-foreground-muted mt-2">You haven't created any job roles yet. Create your first job role to start AI screening.</p>
+                </div>
+                <button
+                    onClick={() => navigate('/admin/jobs/new')}
+                    className="premium-button px-8 py-3 rounded-xl font-bold flex items-center gap-2"
+                >
+                    <Zap size={18} /> Create First Job
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Page Header */}
@@ -350,8 +426,8 @@ const Dashboard = () => {
                         <div className="relative group">
                             <div className="flex items-center gap-2 px-4 py-2 bg-glass-card border border-border rounded-xl text-sm font-semibold text-foreground hover:border-indigo-500/50 transition-all cursor-pointer">
                                 <Briefcase size={16} className="text-indigo-500" />
-                                <select 
-                                    value={selectedJobId} 
+                                <select
+                                    value={selectedJobId}
                                     onChange={(e) => handleJobChange(e.target.value)}
                                     className="bg-transparent border-none focus:ring-0 outline-none cursor-pointer pr-8 appearance-none"
                                 >
@@ -366,7 +442,7 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             onClick={handleRunScreening}
                             disabled={screeningLoading || !selectedJobId}
                             className="premium-button px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 disabled:opacity-50"
@@ -523,7 +599,12 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                                 <div className="flex-1 min-h-0 relative">
-                                    {screeningResults.length > 0 ? (
+                                    {resultsLoading ? (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-foreground-muted gap-2">
+                                            <Loader2 size={32} className="text-indigo-500 animate-spin" />
+                                            <p className="text-xs font-bold uppercase tracking-widest animate-pulse">Syncing Scores...</p>
+                                        </div>
+                                    ) : screeningResults.length > 0 ? (
                                         <Bar data={barData} options={barOptions} />
                                     ) : (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center text-foreground-muted gap-2">
@@ -633,7 +714,16 @@ const Dashboard = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
-                                            {screeningResults.length > 0 ? screeningResults.map((result, i) => (
+                                            {resultsLoading ? (
+                                                <tr>
+                                                    <td colSpan="5" className="px-6 py-12 text-center">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                                                            <p className="text-foreground-muted font-medium animate-pulse text-sm">Synchronizing latest rankings...</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : screeningResults.length > 0 ? screeningResults.map((result, i) => (
                                                 <tr key={i} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors group">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
