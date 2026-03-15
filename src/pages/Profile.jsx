@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Mail, Building, Shield, CheckCircle, Loader2, Edit, Save, X, Lock, Camera, Key, BarChart3, Users } from 'lucide-react';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 import jobService from '../services/jobs.service';
 import resumeService from '../services/resumes.service';
 

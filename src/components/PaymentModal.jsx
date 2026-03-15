@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Shield, CheckCircle, Loader2, Sparkles, CreditCard, Lock } from 'lucide-react';
 import PaymentService from '../services/payment.service';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 const PaymentModal = ({ plan, isOpen, onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);

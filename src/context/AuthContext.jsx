@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-export const AuthContext = createContext({});
+const AuthContext = createContext({});
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -43,17 +45,11 @@ export const AuthProvider = ({ children }) => {
                 if (session) {
                     setUser(session.user);
                     setToken(session.access_token);
-                    
-                    // Sync with api.js requirement
-                    localStorage.setItem('user', JSON.stringify({
-                        ...session.user,
-                        token: session.access_token
-                    }));
-
+                    // Supabase stores user metadata in user.user_metadata
                     const userProfile = {
-                        full_name: session.user.user_metadata?.full_name || 'HR Manager',
-                        company_name: session.user.user_metadata?.company_name || 'Recruitment AI',
-                        role: session.user.user_metadata?.role || 'HR'
+                        name: session.user.user_metadata.full_name,
+                        company_name: session.user.user_metadata.company_name,
+                        role: session.user.user_metadata.role || 'HR'
                     };
                     setProfile(userProfile);
                     
@@ -63,29 +59,15 @@ export const AuthProvider = ({ children }) => {
                     setToken(null);
                     setUser(null);
                     setProfile(null);
-                    localStorage.removeItem('user');
                 }
+                setLoading(false);
             } catch (err) {
                 console.error('Error getting session:', err);
-                if (isMounted) {
-                    setToken(null);
-                    setUser(null);
-                    setProfile(null);
-                }
-            } finally {
                 if (isMounted) setLoading(false);
             }
         };
 
         getSession();
-
-        // Safety timeout to prevent infinite loading if Supabase hangs
-        const safetyTimeout = setTimeout(() => {
-            if (isMounted) {
-                console.warn('AuthContext: Safety timeout reached, forcing loading to false');
-                setLoading(false);
-            }
-        }, 5000);
 
         const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
@@ -93,39 +75,31 @@ export const AuthProvider = ({ children }) => {
                     setUser(session.user);
                     setToken(session.access_token);
                     const userProfile = {
-                        full_name: session.user.user_metadata?.full_name || 'HR Manager',
-                        company_name: session.user.user_metadata?.company_name || 'Recruitment AI',
-                        role: session.user.user_metadata?.role || 'HR'
+                        name: session.user.user_metadata.full_name,
+                        company_name: session.user.user_metadata.company_name,
+                        role: session.user.user_metadata.role || 'HR'
                     };
                     setProfile(userProfile);
                     const sub = await fetchSubscription(session.user.email);
                     setSubscription(sub);
-
-                    // Sync with api.js requirement
-                    localStorage.setItem('user', JSON.stringify({
-                        ...session.user,
-                        token: session.access_token
-                    }));
                 } else {
                     setUser(null);
                     setToken(null);
                     setProfile(null);
                     setSubscription(null);
-                    localStorage.removeItem('user');
                 }
+                setLoading(true);
                 setLoading(false);
-                clearTimeout(safetyTimeout);
             }
         );
 
         return () => {
             isMounted = false;
             authListener?.unsubscribe();
-            clearTimeout(safetyTimeout);
         };
     }, []);
 
-    const signUp = useCallback(async ({ email, password, fullName, companyName }) => {
+    const signUp = async ({ email, password, fullName, companyName }) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -140,9 +114,9 @@ export const AuthProvider = ({ children }) => {
 
         if (error) throw error;
         return data;
-    }, []);
+    };
 
-    const signIn = useCallback(async ({ email, password }) => {
+    const signIn = async ({ email, password }) => {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -150,78 +124,58 @@ export const AuthProvider = ({ children }) => {
 
         if (error) throw error;
         return data;
-    }, []);
+    };
 
-    const signOut = useCallback(async () => {
-        try {
-            console.log('AuthContext: Starting ultra-robust sign out...');
-            
-            // 1. Clear state IMMEDIATELY (Synchronous)
-            setUser(null);
-            setProfile(null);
-            setSubscription(null);
-            setToken(null);
-            
-            // 2. Clear all local storage IMMEDIATELY (Synchronous)
-            localStorage.clear();
-            sessionStorage.clear();
+    const signOut = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        setSubscription(null);
+        setToken(null);
+        localStorage.clear();
+        sessionStorage.clear();
+    };
 
-            // 3. Attempt Supabase sign out with a race condition (timeout)
-            // We don't want to wait forever for a network request during logout
-            await Promise.race([
-                supabase.auth.signOut(),
-                new Promise(resolve => setTimeout(resolve, 1500)) // 1.5s timeout
-            ]);
-            
-            console.log('AuthContext: Sign out local data cleared');
-        } catch (err) {
-            console.error('Ultra-robust logout error:', err);
-        } finally {
-            // 4. Force hard redirect to clear everything and reset app state
-            window.location.href = '/login';
-        }
-    }, []);
-
-    const resetPasswordForEmail = useCallback(async (email) => {
+    const resetPasswordForEmail = async (email) => {
         const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
         return data;
-    }, []);
+    };
 
-    const updatePassword = useCallback(async (newPassword) => {
+    const updatePassword = async (newPassword) => {
         const { data, error } = await supabase.auth.updateUser({
             password: newPassword
         });
         if (error) throw error;
         return data;
-    }, []);
+    };
 
-    const updateProfileData = useCallback(async (userId, updates) => {
+    const updateProfileData = async (userId, updates) => {
         const { data, error } = await supabase.auth.updateUser({
             data: updates
         });
         if (error) throw error;
         
         const newProfile = {
-            full_name: data.user.user_metadata.full_name,
+            name: data.user.user_metadata.full_name,
             company_name: data.user.user_metadata.company_name,
             role: data.user.user_metadata.role
         };
         setProfile(newProfile);
         return data;
-    }, []);
+    };
 
-    const refreshSubscription = useCallback(async () => {
+    const refreshSubscription = async () => {
         if (user) {
             const sub = await fetchSubscription(user.email);
             setSubscription(sub);
             return sub;
         }
-    }, [user]);
+    };
 
-    const value = useMemo(() => ({
+    const value = {
         user,
         profile,
         loading,
@@ -235,21 +189,21 @@ export const AuthProvider = ({ children }) => {
         updatePassword,
         updateProfileData,
         isAuthenticated: () => !!user,
-        isHR: () => profile?.role === 'HR' || profile?.role === 'ADMIN',
+        isHR: () => profile?.role === 'HR',
         isAdmin: () => profile?.role === 'ADMIN',
         getCurrentUser: () => {
             if (!user) return null;
             return {
                 id: user.id,
                 email: user.email,
-                fullName: profile?.full_name,
+                fullName: profile?.name,
                 companyName: profile?.company_name,
                 role: profile?.role,
                 token: token,
                 subscription: subscription,
             };
         },
-    }), [user, profile, loading, token, subscription, refreshSubscription, signUp, signIn, signOut, resetPasswordForEmail, updatePassword, updateProfileData]);
+    };
 
     return (
         <AuthContext.Provider value={value}>

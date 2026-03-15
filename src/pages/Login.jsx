@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Lock, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -28,13 +28,9 @@ const Login = () => {
 
         setLoading(true);
         try {
-            if (typeof signIn !== 'function') {
-                throw new Error('Authentication service is not initialized properly. Please refresh the page.');
-            }
             await signIn({ email, password });
             navigate('/admin', { replace: true });
         } catch (err) {
-            console.error('Login error:', err);
             setError(err.message || 'Invalid email or password.');
             setLoading(false);
         }

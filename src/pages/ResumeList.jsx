@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 import { Upload, FileText, CheckCircle, Clock, Loader2, Briefcase, Zap, Download, Trash2 } from 'lucide-react';
 import screeningService from '../services/screening.service';
 import jobService from '../services/jobs.service';

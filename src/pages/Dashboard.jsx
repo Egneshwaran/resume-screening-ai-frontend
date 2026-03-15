@@ -44,7 +44,7 @@ import {
     CheckCircle2,
     Trash2
 } from 'lucide-react';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 import exportService from '../services/export.service';
 import jobService from '../services/jobs.service';
 import screeningService from '../services/screening.service';
@@ -91,8 +91,6 @@ const Dashboard = () => {
     const { profile } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [exportLoading, setExportLoading] = useState(false);
     const [screeningLoading, setScreeningLoading] = useState(false);
     const [showExportOptions, setShowExportOptions] = useState(false);
@@ -114,38 +112,25 @@ const Dashboard = () => {
     }, [location.pathname]);
 
     const fetchJobs = async () => {
-        setLoading(true);
-        setError(null);
         try {
             const response = await jobService.getAllJobs();
-            const jobsData = response.data || [];
-            setJobs(jobsData);
-            
-            if (jobsData.length > 0) {
-                const firstJobId = jobsData[0].id;
-                setSelectedJobId(firstJobId);
-                // fetchResults will set loading to false in its finally block
-                await fetchResults(firstJobId);
-            } else {
-                setLoading(false);
+            setJobs(response.data);
+            if (response.data.length > 0) {
+                setSelectedJobId(response.data[0].id);
+                fetchResults(response.data[0].id);
             }
         } catch (error) {
             console.error("Failed to fetch jobs:", error);
-            setError("Unable to connect to the recruitment server. Please try refreshing or checking your connection.");
-            setLoading(false);
         }
     };
 
     const fetchResults = async (jobId) => {
-        // Only set local loading if we're not overall loading
         try {
+            // Fetch combined results from both Resume Bank and AI Screening
             const response = await screeningService.getResultsCombined(jobId);
-            setScreeningResults(response.data || []);
+            setScreeningResults(response.data);
         } catch (error) {
             console.error("Failed to fetch results:", error);
-            // We don't want a results failure to block the whole dashboard
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -345,55 +330,6 @@ const Dashboard = () => {
             }
         }
     };
-
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-                <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
-                <p className="text-foreground-muted font-medium animate-pulse">Syncing recruitment data...</p>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 glass-card p-12 text-center max-w-2xl mx-auto">
-                <div className="p-4 rounded-full bg-rose-500/10 text-rose-500">
-                    <AlertCircle size={48} />
-                </div>
-                <div>
-                    <h3 className="text-xl font-bold text-foreground">Service Unavailable</h3>
-                    <p className="text-foreground-muted mt-2">{error}</p>
-                </div>
-                <button 
-                    onClick={fetchJobs}
-                    className="premium-button px-8 py-3 rounded-xl font-bold flex items-center gap-2"
-                >
-                    <Activity size={18} /> Retry Connection
-                </button>
-            </div>
-        );
-    }
-
-    if (jobs.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 glass-card p-12 text-center max-w-2xl mx-auto">
-                <div className="p-4 rounded-full bg-indigo-500/10 text-indigo-500">
-                    <Briefcase size={48} />
-                </div>
-                <div>
-                    <h3 className="text-xl font-bold text-foreground">No Projects Found</h3>
-                    <p className="text-foreground-muted mt-2">You haven't created any job roles yet. Create your first job role to start AI screening.</p>
-                </div>
-                <button 
-                    onClick={() => navigate('/admin/jobs/new')}
-                    className="premium-button px-8 py-3 rounded-xl font-bold flex items-center gap-2"
-                >
-                    <Zap size={18} /> Create First Job
-                </button>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">

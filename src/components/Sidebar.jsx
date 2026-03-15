@@ -13,7 +13,7 @@ import {
     Zap
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 const NavItem = ({ to, icon, label, isOpen }) => {
     const location = useLocation();
@@ -39,13 +39,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     const navigate = useNavigate();
     const { signOut } = useAuth();
 
-    const handleLogout = (e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        console.log('Sidebar: Logout button clicked');
-        signOut();
+    const handleLogout = async () => {
+        await signOut();
+        navigate('/login');
     };
 
     return (

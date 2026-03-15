@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Info, AlertCircle, CheckCircle2, XCircle, Download, Loader2, User, Activity, Target, Zap, Award, Layers, TrendingUp, BarChart3, ChevronRight } from 'lucide-react';
 import screeningService from '../services/screening.service';
 import jobService from '../services/jobs.service';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 const Rankings = () => {
     const { jobId } = useParams();

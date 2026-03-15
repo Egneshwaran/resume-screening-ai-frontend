@@ -14,7 +14,7 @@ import {
     Shield
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 import jobService from '../services/jobs.service';
 import screeningService from '../services/screening.service';
 import resumeService from '../services/resumes.service';

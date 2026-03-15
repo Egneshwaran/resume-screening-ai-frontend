@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, ChevronRight, Loader2, Briefcase, Trash2 } from 'lucide-react';
 import jobService from '../services/jobs.service';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 const JobList = () => {
     const navigate = useNavigate();

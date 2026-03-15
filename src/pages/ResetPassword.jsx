@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, AlertCircle, CheckCircle, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 
 const ResetPassword = () => {
     const navigate = useNavigate();

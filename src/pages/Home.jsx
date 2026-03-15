@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import LandingNavbar from '../components/LandingNavbar';
 import Footer from '../components/Footer';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../context/AuthContext';
 import AnimatedLightBackground from '../components/AnimatedLightBackground';
 import AnimatedDarkBackground from '../components/AnimatedDarkBackground';
 import PaymentModal from '../components/PaymentModal';
